@@ -1,0 +1,42 @@
+Source: pristine-lfs
+Maintainer: Andrej Shadura <andrewsh@debian.org>
+Section: utils
+Priority: optional
+Build-Depends:
+ debhelper-compat (= 12),
+ dh-sequence-python3,
+ python3-all (>= 3.7),
+ python3-debian,
+ python3-docutils (>= 0.12),
+ python3-setuptools (>= 0.6b3),
+ python3-sh,
+ python3-pytest (>= 4.6) <!nocheck>,
+ git-lfs <!nocheck>,
+Standards-Version: 4.5.1
+Rules-Requires-Root: no
+X-Python3-Version: >= 3.9
+Vcs-Browser: https://salsa.debian.org/debian/pristine-lfs
+Vcs-Git: https://salsa.debian.org/debian/pristine-lfs.git
+Homepage: https://salsa.debian.org/pristine-lfs-team/pristine-lfs
+
+Package: pristine-lfs
+Architecture: any
+Depends:
+ git,
+ git-lfs,
+ ${misc:Depends},
+ ${python3:Depends},
+ ${shlibs:Depends},
+Description: regenerate pristine tarballs from git-lfs
+ pristine-lfs can store pristine upstream tarballs in Git leveraging Git
+ LFS. Instead of storing the potentially large tarballs within the Git
+ repository as blobs, Git LFS only stores specially prepared metadata
+ in the repository, while storing the actual file contents out of band
+ on a Git LFS server.
+ .
+ Using pristine-lfs allows Debian packages to be built entirely using
+ sources in version control, without the need to keep copies of upstream
+ tarballs.
+ .
+ An optional upstream signature may be attached to tarballs for verification
+ by, for example, dpkg-source(1).

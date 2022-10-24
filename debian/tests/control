@@ -1,0 +1,6 @@
+Tests: smoke
+Restrictions: allow-stderr, superficial
+
+Tests: checkout
+Depends: @, diffutils, ca-certificates
+Restrictions: allow-stderr, needs-internet

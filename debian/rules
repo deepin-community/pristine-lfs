@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+
+export PYBUILD_TEST_ARGS = --junit-xml=/dev/null
+
+%:
+	dh $@ --buildsystem=pybuild
+
+execute_after_dh_auto_install:
+	rm debian/*/usr/share/doc/*/COPYING

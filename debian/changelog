@@ -1,0 +1,89 @@
+pristine-lfs (20210404.1-1) unstable; urgency=medium
+
+  * New upstream bugfix release.
+
+ -- Andrej Shadura <andrew.shadura@collabora.co.uk>  Thu, 16 Sep 2021 15:09:42 +0100
+
+pristine-lfs (20210404.0-2) unstable; urgency=medium
+
+  * Make sure pytest doesn’t pollute the build directory with test
+    results which would otherwise be installed with the package
+    (Closes: #986446).
+
+ -- Andrej Shadura <andrew.shadura@collabora.co.uk>  Tue, 06 Apr 2021 11:41:59 +0200
+
+pristine-lfs (20210404.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Andrej Shadura <andrew.shadura@collabora.co.uk>  Sun, 04 Apr 2021 22:15:42 +0200
+
+pristine-lfs (20210222.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Declare minimum Python and pytest versions.
+
+ -- Andrej Shadura <andrewsh@debian.org>  Mon, 22 Feb 2021 11:41:12 +0100
+
+pristine-lfs (20210210.0-2) unstable; urgency=medium
+
+  * Install ca-certificate for the networked test.
+
+ -- Andrej Shadura <andrewsh@debian.org>  Wed, 10 Feb 2021 21:02:27 +0100
+
+pristine-lfs (20210210.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Fix a crash when pristine-lfs is called without any arguments
+    (Closes: #982447).
+  * Add autopkgtests.
+  * Only support Python 3.7+.
+
+ -- Andrej Shadura <andrewsh@debian.org>  Wed, 10 Feb 2021 14:48:20 +0100
+
+pristine-lfs (20210209.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update the upstream signing key.
+  * Update gbp.conf.
+  * Set Rules-Requires-Root: no.
+  * Bump Standards-Version to 4.5.1.
+  * Use dh-sequence-python3 instead of --with python3.
+  * Replace override_dh_auto_install with execute_after_dh_auto_install.
+  * Update copyrights.
+  * Use secure URI in debian/watch.
+  * Set field Upstream-Name in debian/copyright.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+  * Update dependencies.
+  * Enable tests.
+
+ -- Andrej Shadura <andrew.shadura@collabora.co.uk>  Tue, 09 Feb 2021 20:09:24 +0100
+
+pristine-lfs (20190910.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update the homepage (Closes: #934270).
+
+ -- Andrej Shadura <andrew.shadura@collabora.co.uk>  Wed, 11 Sep 2019 12:10:19 +0200
+
+pristine-lfs (20190802.0-1) unstable; urgency=medium
+
+  * New upstream version.
+
+ -- Andrej Shadura <andrew.shadura@collabora.co.uk>  Mon, 12 Aug 2019 20:14:18 +0200
+
+pristine-lfs (20190717.0-1) unstable; urgency=medium
+
+  * New upstream version.
+  * Update the homepage URL.
+  * Trim trailing whitespace.
+  * Add signing-key.asc.
+
+ -- Andrej Shadura <andrew.shadura@collabora.co.uk>  Sun, 21 Jul 2019 17:46:48 -0300
+
+pristine-lfs (20190626.0-1) unstable; urgency=medium
+
+  * Initial upload.
+
+ -- Andrej Shadura <andrew.shadura@collabora.co.uk>  Tue, 16 Jul 2019 12:16:51 -0300

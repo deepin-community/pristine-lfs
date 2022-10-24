@@ -1,0 +1,20 @@
+#!/bin/sh
+
+testdir=$PWD/debian/tests
+
+cd "$AUTOPKGTEST_TMP"
+
+git clone https://salsa.debian.org/pristine-lfs-team/test-repo
+
+cd test-repo
+
+pristine-lfs list > list
+
+diff -u list $testdir/tarballs.list
+
+mkdir -p out
+
+pristine-lfs -v checkout -b pristine-lfs-source --full dash_0.5.10.2-5.dsc -o out
+pristine-lfs -v checkout -b pristine-lfs-source --full cargo_0.47.0-3.dsc  -o out
+
+md5sum -c $testdir/tarballs.md5sums
