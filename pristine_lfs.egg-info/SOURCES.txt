@@ -18,6 +18,8 @@ pristine_lfs.egg-info/dependency_links.txt
 pristine_lfs.egg-info/entry_points.txt
 pristine_lfs.egg-info/requires.txt
 pristine_lfs.egg-info/top_level.txt
+stubs/sh.pyi
+stubs/sh/contrib.pyi
 tests/conftest.py
 tests/test_checkout.py
 tests/test_commit.py

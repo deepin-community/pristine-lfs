@@ -2,6 +2,8 @@
 
 export PYBUILD_TEST_ARGS = --junit-xml=/dev/null
 
+include /usr/share/dpkg/default.mk
+
 %:
 	dh $@ --buildsystem=pybuild
 
