@@ -51,8 +51,12 @@ esac
 supported_lfs_hashsums = ['sha256']
 
 
+RETURN_CMD = {} if sh.__version__.startswith('1.') else {'_return_cmd': True}
+
+
 @contextmanager
 def open_index(name: str) -> Generator[Path, None, None]:
+    """Context manager for a named temporary Git index file."""
     index = Path(git_dir()) / f"index-{name}"
     if index.exists():
         index.unlink()
@@ -68,8 +72,7 @@ Attribute = Tuple[str, AttributeValue]
 
 
 def parse_attr(attr: str) -> Attribute:
-    """
-    Parse a Git attribute into its value:
+    """Parse a Git attribute into its value.
 
     >>> parse_attr('attr')
     ('attr', True)
@@ -90,8 +93,7 @@ def parse_attr(attr: str) -> Attribute:
 
 
 def parse_git_attributes(s: str) -> Iterable[tuple[str, Mapping[str, AttributeValue]]]:
-    """
-    Parse Git attributes from a string:
+    """Parse Git attributes from a string.
 
     >>> list(parse_git_attributes('''
     ... ab*     merge=filfre
@@ -140,10 +142,9 @@ default_gitattributes = list(parse_git_attributes(gitattributes))
 
 
 def check_branch(name: str) -> Optional[str]:
-    """
-    Check a branch exists, return the hash it points at, if it does.
+    """Check a branch exists, return the hash it points at, if it does.
 
-    None if there’s no such branch
+    None if there’s no such branch.
     """
     try:
         return git('show-ref', '--heads', '--hash', '--', name)
@@ -152,23 +153,28 @@ def check_branch(name: str) -> Optional[str]:
 
 
 def git_dir() -> str:
+    """Return the path to the `.git` directory."""
     return git('rev-parse', '--git-dir').strip('\n')
 
 
 def git_head() -> str:
+    """Return the name of the current branch, or the SHA1 of the current commit if we're in a detached HEAD state."""
     return git('rev-parse', '-q', '--verify', '--symbolic-full-name', 'HEAD', _ok_code=[0, 1]).strip('\n')
 
 
 def branch_remote(name: str) -> Optional[str]:
-    '''
-    Find an upstream remote for a tracking branch
-    '''
-    if not name.startswith('refs/heads/') and not name.startswith('refs/'):
-        name = 'refs/heads/' + name
-    return git('for-each-ref', '--format=%(upstream:remotename)', '--', name, _ok_code=[0, 1]).strip('\n') or None
+    """Find an upstream remote for a tracking branch."""
+    if name.startswith('refs/heads/'):
+        name = name[len("refs/heads/"):]
+
+    return git('config', 'branch.%s.remote' % name, ok_code=[0, 1]).strip('\n') or None
 
 
 def find_remote_branches(name: str) -> list[tuple[str, str]]:
+    """Find remote branches with a given name.
+
+    Return a list of tuples, each tuple containing the SHA1 and the full name of a remote branch.
+    """
     try:
         branches = [line.split(' ') for line in git('show-ref', '--', name).splitlines()]
         return [(b[0], b[1]) for b in branches if b[1].startswith('refs/remotes/')]
@@ -177,6 +183,12 @@ def find_remote_branches(name: str) -> list[tuple[str, str]]:
 
 
 def preferred_remote_branch(remote_branches: list[tuple[str, str]]) -> tuple[str, str]:
+    """Choose one remote branch out of a list.
+
+    Return the first remote branch that matches the current remote, or the first remote
+    branch if there is no current remote. The current remote is a remote for the currently
+    checked out branch.
+    """
     logger.debug("Remote branches: %r", remote_branches)
     current_remote = branch_remote(git_head())
     logger.debug("Current remote: %r", current_remote)
@@ -188,6 +200,11 @@ def preferred_remote_branch(remote_branches: list[tuple[str, str]]) -> tuple[str
 
 
 def track_remote_branch(name: str):
+    """Find and track a remote branch for a given branch.
+
+    Find all remote branches with a given name, and then create a local branch with the
+    same name that tracks the remote branch picked by preferred_remote_branch.
+    """
     remote_branches = find_remote_branches(name)
     if len(remote_branches) == 0:
         raise RuntimeError('remote branch expected but not found')
@@ -196,6 +213,14 @@ def track_remote_branch(name: str):
 
 
 def find_branch(branch: str) -> str:
+    """Find a branch.
+
+    Return one of the following:
+     * an existing branch of the given name
+     * a remote branch picked by preferred_remote_branch
+
+    Raise an exception if all fails.
+    """
     if check_branch(branch) is None:
         remote_branches = find_remote_branches(branch)
         if remote_branches:
@@ -206,21 +231,25 @@ def find_branch(branch: str) -> str:
 
 
 def store_lfs_object(io: Any) -> str:
+    """Store a file-like object in Git LFS, and return the Git LFS pointer for the stored blob."""
     return str(git.lfs.clean(io.name, _in=io))
 
 
 def store_git_object(io: Any) -> str:
+    """Store a file-like object in Git, and return its hash."""
     return git('hash-object', '-w', '--stdin', _in=io).strip('\n')
 
 
-def stage_file(filename: Union[str, bytes], io: Any, index: Path = None):
+def stage_file(filename: Union[str, bytes], io: Any, index: Optional[Path] = None):
+    """Take a file, store it in the Git object store, and then add it to the index."""
     blob = store_git_object(io)
     if isinstance(filename, bytes):
         filename = filename.decode()
     git('update-index', '--add', '--replace', '--cacheinfo', "100644,%s,%s" % (blob, filename), index=index)
 
 
-def create_commit(branch: str, message: str, index: Path = None) -> str:
+def create_commit(branch: str, message: str, index: Optional[Path] = None) -> str:
+    """Create a commit with the given message and index, and update the given branch to point to it."""
     tree = git('write-tree', index=index).strip('\n')
     if not len(tree):
         raise RuntimeError('write-tree failed')
@@ -238,11 +267,14 @@ def create_commit(branch: str, message: str, index: Path = None) -> str:
 
 
 def refresh_main_index():
+    """Refresh the main index, ignoring submodules, missing files and unmerged files."""
     git('update-index', '--ignore-submodules', '-q', '--ignore-missing', '--unmerged', '--refresh')
 
 
 def parse_diff_entry(entry: str) -> Mapping[str, str]:
     r"""
+    Parse an entry in git-diff-tree format into a dictionary.
+
     >>> parse_diff_entry(
     ... ":100644 100644 777f41fb18215a23a779a831b38d24ff6171775a c5ac094096d35c687c0cc5054b5a1433c293ebd5 M\tpristine_lfs/main.py"
     ... )
@@ -278,17 +310,13 @@ def parse_diff_entry(entry: str) -> Mapping[str, str]:
     }
 
 
-def commit_lfs_file(io: IO[bytes], branch: str, template: str = None, overwrite: bool = False):
-    """
-    Store the file in the LFS storage and commit it to a branch.
-    """
+def commit_lfs_file(io: IO[bytes], branch: str, template: Optional[str] = None, overwrite: bool = False):
+    """Store the file in the LFS storage and commit it to a branch."""
     commit_lfs_files([io], branch, template=template, overwrite=overwrite)
 
 
-def commit_lfs_files(ios: Sequence[IO[bytes]], branch: str, template: str = None, overwrite: bool = False):
-    """
-    Store the files in the LFS storage and commit them to a branch.
-    """
+def commit_lfs_files(ios: Sequence[IO[bytes]], branch: str, template: Optional[str] = None, overwrite: bool = False):
+    """Store the files in the LFS storage and commit them to a branch."""
     # make sure the pre-push hook has been set up
     hook_path = Path(git_dir()) / 'hooks' / 'pre-push'
     if not hook_path.is_file():
@@ -302,7 +330,7 @@ def commit_lfs_files(ios: Sequence[IO[bytes]], branch: str, template: str = None
     with open_index("pristine-lfs") as index:
         # make sure we include all previously committed files
         if check_branch(branch) is not None:
-            git(git('ls-tree', '-r', '--full-name', branch), 'update-index', '--index-info', index=index)
+            git('update-index', '--index-info', index=index, _in=git('ls-tree', '-r', '--full-name', branch))
 
         # make sure .gitattributes is present
         stage_file('.gitattributes', gitattributes, index=index)
@@ -336,6 +364,7 @@ def commit_lfs_files(ios: Sequence[IO[bytes]], branch: str, template: str = None
 
 
 def list_lfs_files(branch: str) -> list[str]:
+    """Return a list of all the files tracked by Git LFS in the given branch."""
     return git.lfs('ls-files', '--name-only', branch).splitlines()
 
 
@@ -346,11 +375,17 @@ def parse_entry(entry: str) -> tuple[str, ...]:
 
 
 def list_git_files(branch: str) -> Mapping[str, str]:
+    """Return a dictionary mapping file names to SHA1 hashes for all files in the given branch."""
     entries = [parse_entry(line) for line in git('ls-tree', '-r', '--full-name', branch).splitlines()]
     return {e[3]: e[2] for e in entries if e[1] == 'blob'}
 
 
 def is_lfs_managed(filename: str, attributes: Iterable[tuple[str, Mapping[str, AttributeValue]]]):
+    """Tell if the file is managed by Git LFS.
+
+    If the filename matches a pattern in the attributes, and the filter attribute is set
+    to lfs, then the file is LFS-managed.
+    """
     lfs_managed = False
     for pattern, attrs in attributes:
         if fnmatchcase(filename, pattern):
@@ -360,6 +395,11 @@ def is_lfs_managed(filename: str, attributes: Iterable[tuple[str, Mapping[str, A
 
 
 def checkout_lfs_file(branch: str, filename: str, outdir: Union[str, Path] = '.'):
+    """
+    Check out a file from a Git branch:
+     * if it's managed by LFS, use Git LFS
+     * otherwise check it out normally
+    """
     files = list_git_files(branch)
     if '.gitattributes' in files:
         attributes = parse_git_attributes(git('cat-file', 'blob', files['.gitattributes']))
@@ -378,13 +418,14 @@ def checkout_lfs_file(branch: str, filename: str, outdir: Union[str, Path] = '.'
 
 
 def verify_lfs_file(branch: str, tarball: Path) -> bool:
+    """Check if the tarball's hash matches the one stored in the Git repo."""
     files = list_git_files(branch)
 
     filename = tarball.name
     if filename not in files:
         raise GitFileNotFound(filename, branch)
 
-    metadata = git('cat-file', 'blob', files[filename])
+    metadata = git('cat-file', 'blob', files[filename], **RETURN_CMD)
     parsed_metadata = dict(parse_pointer(metadata))
     oid = parsed_metadata['oid']
     algo, hashsum = oid.split(':', 1)
@@ -412,6 +453,7 @@ def verify_lfs_file(branch: str, tarball: Path) -> bool:
 
 def checkout_package(package: str, version: Version, branch: str, outdir: Union[str, Path],
                      requested: Optional[Sequence[str]] = None):
+    """Check out all files necessary for a given version of a given package."""
     logger.info(_("Checking out files for {package} version {version} to {outdir}:").format(
         package=package,
         version=version, outdir=outdir
@@ -434,7 +476,7 @@ def checkout_package(package: str, version: Version, branch: str, outdir: Union[
 
 def parse_pointer(pointer: IO[str]) -> Iterable[tuple[str, str]]:
     """
-    Parse Git LFS file pointer into a mapping of keys to values
+    Parse Git LFS file pointer into a mapping of keys to values.
 
     >>> from io import StringIO
     >>> dict(parse_pointer(StringIO('''version https://git-lfs.github.com/spec/v1

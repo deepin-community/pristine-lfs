@@ -2,9 +2,7 @@
 
 import fnmatch
 import os
-from distutils import log
-
-from setuptools import setup
+from setuptools import setup, distutils
 
 
 def read(fname):
@@ -15,7 +13,7 @@ def glob(fname):
 
 def generate_manpage(src, dst):
     import docutils.core
-    log.info("generating a manpage from %s to %s", src, dst)
+    distutils.log.info("generating a manpage from %s to %s", src, dst)
     docutils.core.publish_file(source_path=src, destination_path=dst, writer_name='manpage')
 
 def man_name(fname):
@@ -35,17 +33,6 @@ def man_path(fname):
 
 def man_files(pattern):
     return list(map(man_path, map(man_name, glob(pattern))))
-
-# monkey patch setuptools to use distutils owner/group functionality
-from setuptools.command import sdist
-
-
-sdist_org = sdist.sdist
-class sdist_new(sdist_org):
-    def initialize_options(self):
-        sdist_org.initialize_options(self)
-        self.owner = self.group = 'root'
-sdist.sdist = sdist_new
 
 __manpages__ = 'pristine-lfs.rst'
 

@@ -1,3 +1,27 @@
+pristine-lfs (20241219.0-1) unstable; urgency=medium
+
+  [ Rebecca N. Palmer ]
+  * Support Python 3.13 and test on it (Closes: #1090261).
+  * Stop using glob('**') as it changed meaning in Python 3.13.
+
+  [ Andrej Shadura ]
+  * Rmeove pgpsigurlmangle from debian/watch as PyPI no longer hosts PGP signatures.
+
+ -- Andrej Shadura <andrew.shadura@collabora.co.uk>  Thu, 19 Dec 2024 11:07:25 +0100
+
+pristine-lfs (20241001.0-1) unstable; urgency=medium
+
+  * New upstream release (Closes: #1082147).
+
+ -- Andrej Shadura <andrew.shadura@collabora.co.uk>  Tue, 01 Oct 2024 15:16:16 +0200
+
+pristine-lfs (20210404.1-2) unstable; urgency=medium
+
+  * Include default.mk to work around the issue with dh_python3.
+  * Limit supported python3-sh to 1.x.
+
+ -- Andrej Shadura <andrew.shadura@collabora.co.uk>  Thu, 02 Mar 2023 00:15:11 +0100
+
 pristine-lfs (20210404.1-1) unstable; urgency=medium
 
   * New upstream bugfix release.

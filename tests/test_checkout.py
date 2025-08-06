@@ -7,7 +7,7 @@ def test_pristine_lfs_simple_checkout(fake_pristine_lfs):
     outdir = repo / 'tmp'
 
     do_checkout('pristine-lfs', tarball=tarball.name, outdir=outdir)
-    assert len(list(outdir.glob('**'))) == 1, list(outdir.glob('**'))
+    assert len(list(outdir.glob('**/'))) == 1, list(outdir.glob('**/'))
     assert (outdir / tarball.name).is_file(), 'Extracted tarball not found'
     assert (outdir / tarball.name).stat().st_size == size, 'Extracted tarball of a wrong size'
 

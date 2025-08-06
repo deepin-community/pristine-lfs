@@ -9,6 +9,11 @@ import pytest
 
 
 try:
+    import sh
+except ImportError:
+    assert False, "These tests require working python-sh"
+
+try:
     from sh.contrib import git
 except ImportError:
     assert False, "These tests require Git"
@@ -60,10 +65,10 @@ def fake_pristine_lfs(fake_tarball):
 
     git.checkout('-b', 'pristine-lfs')
     git.lfs.track('*.tar.*')
-    with Path('.gitattributes') as f:
-        assert f.is_file()
-        assert f.stat().st_size != 0
-        git.add(f)
+    f = Path('.gitattributes')
+    assert f.is_file()
+    assert f.stat().st_size != 0
+    git.add(f)
 
     git.add(tarball)
     git.commit(message=f'add {tarball.name}')
@@ -88,17 +93,17 @@ def test_git_repo(fake_pristine_lfs):
     git('read-tree', empty)
     # start a new empty branch
     git.checkout(orphan='debian/test')
-    with Path('debian/changelog') as changelog:
-        changelog.parent.mkdir()
-        changelog.write_text(dedent(
-            """
-            true (0-0) UNRELEASED; urgency=medium
-            
-              * Empty.
-            
-             -- Nobody <nobody@example.org>  Thu, 01 Jan 1970 12:00:00 +0100
-            """).lstrip('\n'))  # noqa: W293
-        git.add(changelog)
+    changelog = Path('debian/changelog')
+    changelog.parent.mkdir()
+    changelog.write_text(dedent(
+        """
+        true (0-0) UNRELEASED; urgency=medium
+        
+            * Empty.
+        
+            -- Nobody <nobody@example.org>  Thu, 01 Jan 1970 12:00:00 +0100
+        """).lstrip('\n'))  # noqa: W293
+    git.add(changelog)
     git.commit(message='pretend packaging')
     git.reset(hard=True)
     git.clean(force=True)
